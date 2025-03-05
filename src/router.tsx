@@ -4,11 +4,16 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import LogIn from "./pages/LogIn";
 import Join from "./pages/Join";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <Layout />,
+        element: (
+            <ProtectedRoute>
+                <Layout />
+            </ProtectedRoute>
+        ),
         children: [
             {
                 path: "",

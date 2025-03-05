@@ -1,49 +1,9 @@
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
-import styled from "styled-components"
-
-const Wrapper = styled.div`
-height: 100%;
-display: flex;
-flex-direction: column;
-align-items: center;
-width: 420px;
-padding: 50px 0px;
-`;
-
-const Form = styled.form`
-margin-top: 50px;
-display: flex;
-flex-direction: column;
-gap: 10px;
-width: 100%;
-`;
-
-const Title = styled.h1`
-font-size: 42px;
-`;
-
-const Input = styled.input`
-padding: 10px 20px;
-border-radius: 50px;
-border: none;
-width: 100%;
-font-size: 16px;
-`;
-
-const Error = styled.span`
-font-weight: 600;
-color: tomato;
-`;
-
-const Button = styled.button`
-    cursor: pointer;
-    padding: 10px 20px;
-    border-radius: 50px;
-    border: none;
-    &:hover {
-    opacity: 0.8;
-    }
-`;
+import { auth } from "../firebase";
+import { Link, useNavigate } from "react-router-dom";
+import { FirebaseError } from "firebase/app";
+import { Button, Error, Form, Input, Switcher, Title, Wrapper } from "../components/AuthComponents";
 
 export default function Join() {
     const [isLoading, setIsLoading] = useState(false);
@@ -51,23 +11,30 @@ export default function Join() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const navigate = useNavigate();
 
-    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setError("");
+        if (isLoading || name === "" || email === "" || password === "") return;
         console.log(name, email, password);
         try {
+            setIsLoading(true);
             // create an account
-
+            const credentials = await createUserWithEmailAndPassword(auth, email, password);
+            console.log(credentials);
+            console.log(credentials.user);
             // set the name of the user
-
+            await updateProfile(credentials.user, { displayName: name });
             // redirect to the home page
-
-            // initialize input
-            setName("");
-            setEmail("");
-            setPassword("");
+            navigate("/");
         } catch (e) {
             // setError
+            console.log(e);
+            if (e instanceof FirebaseError) {
+                console.log(e.code, e.message);
+                setError(e.message);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -87,7 +54,7 @@ export default function Join() {
     return (
         <>
             <Wrapper>
-                <Title>Join</Title>
+                <Title>Join 𝕏</Title>
                 <Form onSubmit={onSubmit}>
                     <Input name="name" value={name} placeholder="Name" type="text" onChange={onChange} required />
                     <Input name="email" value={email} placeholder="Email" type="email" onChange={onChange} required />
@@ -95,6 +62,9 @@ export default function Join() {
                     {isLoading ? <h2>Loading...</h2> : <Button type="submit">Submit</Button>}
                 </Form>
                 {error !== "" ? <Error>{error}</Error> : null}
+                <Switcher>
+                    Already have an account? <Link to="/login">Log In &rarr;</Link>
+                </Switcher>
             </Wrapper>
         </>
     )
