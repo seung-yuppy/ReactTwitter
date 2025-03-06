@@ -3,7 +3,7 @@ import { useState } from "react";
 import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
-import { Button, Error, Form, Input, Switcher, Title, Wrapper } from "../components/AuthComponents";
+import { Button, Error, Form, Input, Switcher, Title, Wrapper } from "../styles/AuthComponents";
 
 export default function Join() {
     const [isLoading, setIsLoading] = useState(false);
@@ -17,13 +17,10 @@ export default function Join() {
         e.preventDefault();
         setError("");
         if (isLoading || name === "" || email === "" || password === "") return;
-        console.log(name, email, password);
         try {
             setIsLoading(true);
             // create an account
             const credentials = await createUserWithEmailAndPassword(auth, email, password);
-            console.log(credentials);
-            console.log(credentials.user);
             // set the name of the user
             await updateProfile(credentials.user, { displayName: name });
             // redirect to the home page

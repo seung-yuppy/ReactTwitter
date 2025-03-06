@@ -95,11 +95,11 @@ export default function PostTweetForm() {
                 updateDoc(doc, {
                     photo: url,
                 });
-                setTweet("");
-                setFile(null);
-            }
+            };
+            setTweet("");
+            setFile(null);
         } catch (error) {
-            console.log(e);
+            console.log(error);
         } finally {
             setIsLoading(false)
         }

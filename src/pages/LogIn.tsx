@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
-import { Button, Error, Form, Input, Switcher, Title, Wrapper } from "../components/AuthComponents";
+import { Button, Error, Form, Input, Switcher, Title, Wrapper } from "../styles/AuthComponents";
 import GitHubButton from "../components/GithubButton";
 
 export default function LogIn() {
@@ -17,7 +17,6 @@ export default function LogIn() {
         e.preventDefault();
         setError("");
         if (isLoading || email === "" || password === "") return;
-        console.log(email, password);
         try {
             setIsLoading(true);
             await signInWithEmailAndPassword(auth, email, password);
