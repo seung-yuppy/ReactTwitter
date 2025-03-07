@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { ITweet } from "../types/ITweet"
 import styled from "styled-components";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, DocumentData, limit, onSnapshot, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, startAfter } from "firebase/firestore";
 import { db } from "../firebase";
 import Tweets from "./Tweets";
 import { Unsubscribe } from "firebase/auth";
@@ -14,6 +14,9 @@ const Wrapper = styled.div`
 
 export default function TimeLine() {
     const [tweets, setTweets] = useState<ITweet[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+    const [hasMore, setHasMore] = useState<boolean>(true);
 
     useEffect(() => {
         let unsubscribe: Unsubscribe | null = null;
@@ -21,6 +24,7 @@ export default function TimeLine() {
             const tweetsQuery = query(
                 collection(db, "tweets"),
                 orderBy("createdAt", "desc"),
+                limit(3),
             );
 
             // 실시간 처리가 아님!
@@ -41,22 +45,14 @@ export default function TimeLine() {
 
             // 실시간 처리!
             // onSnapshot-- > 이벤트 리스너를 연결시킨다
-            unsubscribe = await onSnapshot(tweetsQuery, (snapshot) => {
-                const tweets = snapshot.docs.map((doc) => {
-                    const { tweet, createdAt, userId, username, photo } = doc.data();
-                    return {
-                        tweet,
-                        createdAt,
-                        userId,
-                        username,
-                        photo,
-                        id: doc.id,
-                    };
-                });
-                setTweets(tweets);
+            unsubscribe = onSnapshot(tweetsQuery, (snapshot) => {
+                handleSnapshot(snapshot);
+                setLoading(false);
             });
         };
+
         fetchTweets();
+
         return () => {
             if (unsubscribe) {
                 unsubscribe();
@@ -64,13 +60,65 @@ export default function TimeLine() {
         };
     }, []);
 
+    const handleSnapshot = (snapshot: QuerySnapshot<DocumentData>) => {
+        const newTweets = snapshot.docs.map((doc) => {
+            const { tweet, createdAt, userId, username, photo } = doc.data();
+            return {
+                tweet,
+                createdAt,
+                userId,
+                username,
+                photo,
+                id: doc.id,
+            };
+        });
+
+        setTweets(newTweets);
+        if (snapshot.docs.length > 0) {
+            setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+        }
+        setHasMore(snapshot.docs.length === 3);
+    };
+
+    const fetchNextPage = async () => {
+        if (!lastVisible || loading || !hasMore) return;
+        setLoading(true);
+        const nextTweetsQuery = query(
+            collection(db, "tweets"),
+            orderBy("createdAt", "desc"),
+            startAfter(lastVisible),
+            limit(3)
+        );
+
+        await onSnapshot(nextTweetsQuery, (snapshot) => {
+            const newTweets = snapshot.docs.map((doc) => {
+                const { tweet, createdAt, userId, username, photo } = doc.data();
+                return {
+                    tweet,
+                    createdAt,
+                    userId,
+                    username,
+                    photo,
+                    id: doc.id,
+                };
+            });
+            setTweets((prevTweets) => [...prevTweets, ...newTweets]);
+            if (snapshot.docs.length > 0) {
+                setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+            }
+            setHasMore(snapshot.docs.length === 3);
+            setLoading(false);
+        });
+    };
+
     return (
         <>
             <Wrapper>
                 {tweets.map((tweet) => (
-                    // 트위터 배열 중 한 트윗의 모든 props를 Tweets 컴포넌트에 전달한다
                     <Tweets key={tweet.id} {...tweet} />
                 ))}
+                {loading && <div>Loading...</div>}
+                {hasMore && <button onClick={fetchNextPage}>Load More</button>}
             </Wrapper>
         </>
     );
