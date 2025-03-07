@@ -47,7 +47,7 @@ const DeleteBtn = styled.button`
 `;
 
 // Tweets 컴포넌트에서는 username, photo, tweet, createdAt만을 사용할거임
-export default function Tweets({ username, photo, tweet, createdAt, userId, id }: ITweet) {
+export default function Tweet({ username, photo, tweet, createdAt, userId, id }: ITweet) {
   const user = auth.currentUser;
 
   const onDelete = async () => {

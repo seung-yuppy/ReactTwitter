@@ -3,8 +3,8 @@ import { ITweet } from "../types/ITweet"
 import styled from "styled-components";
 import { collection, DocumentData, limit, onSnapshot, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, startAfter } from "firebase/firestore";
 import { db } from "../firebase";
-import Tweets from "./Tweets";
 import { Unsubscribe } from "firebase/auth";
+import Tweet from "./Tweet";
 
 const Wrapper = styled.div`
     display: flex;
@@ -115,7 +115,7 @@ export default function TimeLine() {
         <>
             <Wrapper>
                 {tweets.map((tweet) => (
-                    <Tweets key={tweet.id} {...tweet} />
+                    <Tweet key={tweet.id} {...tweet} />
                 ))}
                 {loading && <div>Loading...</div>}
                 {hasMore && <button onClick={fetchNextPage}>Load More</button>}
